@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>图层管理</title>
+    <style>
+        /* 页面布局样式 */
+        .container {
+            position: relative;
+        }
+
+        /* 图层管理控件样式 */
+        .layer-control {
+            width: 200px;
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            padding: 10px;
+            cursor: move; /* 可拖动的光标样式 */
+            z-index: 1000;
+        }
+
+        /* 图层列表样式 */
+        .layer-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        /* 图层项样式 */
+        .layer-item {
+            margin-bottom: 5px;
+        }
+
+        /* 图像显示区域 */
+        .image-display {
+            margin-right: 220px; /* 为图层控制面板留出空间 */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="image-display">
+            <!-- 图片上传控件 -->
+            <input type="file" id="fileInput" accept="image/*">
+            <!-- 图像显示区域 -->
+            <div id="imageContainer"></div>
+        </div>
+        <div class="layer-control" id="layerControl">
+            <ul id="layerList" class="layer-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        // 拖动图层控制面板的逻辑
+        dragElement(document.getElementById("layerControl"));
+
+        function dragElement(elmnt) {
+            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            elmnt.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                // 获取鼠标光标开始位置
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                // 计算鼠标光标的新位置
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                // 设置元素的新位置
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                // 停止移动时解除绑定的事件
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                addLayer(file.name);
+                displayImage(file);
+            }
+        });
+
+        function addLayer(layerName) {
+            const layerList = document.getElementById('layerList');
+            const listItem = document.createElement('li');
+            listItem.className = 'layer-item';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = true;
+            checkbox.id = layerName;
+            checkbox.addEventListener('change', function() {
+                // 在这里添加显示/隐藏图层的逻辑
+                const image = document.getElementById('img-' + layerName);
+                if (image) {
+                    image.style.display = this.checked ? '' : 'none';
+                }
+            });
+
+            const label = document.createElement('label');
+            label.htmlFor = layerName;
+            label.textContent = layerName;
+
+            listItem.appendChild(checkbox);
+            listItem.appendChild(label);
+            layerList.appendChild(listItem);
+        }
+
+        function displayImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.id = 'img-' + file.name;
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '400px';
+                document.getElementById('imageContainer').appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>
